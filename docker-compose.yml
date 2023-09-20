@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  filebrowser:
+    image: hurlenko/filebrowser
+    user: "${UID}:${GID}"
+    expose:
+      - 443
+    volumes:
+      - nine_kingdoms_music:/data
+      - nine_kingdoms_config:/config
+    environment:
+      - FB_BASEURL=/
+      - VIRTUAL_HOST=nkb.sqds.me
+      - VIRTUAL_PORT=443
+      - LETSENCRYPT_HOST=nkb.sqds.me
+      - LETSENCRYPT_EMAIL=sqds@cock.li
+    restart: always
+
+  bot:
+    image: squizduos/discord-nine-kingdoms:latest
+    restart: always
+    volumes:
+     - nine_kingdoms_music:/files
+    env_file: .env
+
+volumes:
+  nine_kingdoms_music:
+    external: true
+  nine_kingdoms_config:
+    external: true
+
+networks:
+  default:
+    external:
+      name: nginx-proxy
