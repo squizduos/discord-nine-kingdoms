@@ -1,11 +1,8 @@
 #-*-coding:utf-8-*-
 
-import argparse
 import asyncio
-import json
-import os
 import logging
-import traceback
+import platform
 
 import discord
 from discord.ext import commands
@@ -30,28 +27,10 @@ bot = commands.Bot(
 )
 
 
-
-# initial_extensions = ['cogs.music']
-# for extension in initial_extensions:
-#     try:
-#         bot.load_extension(extension)
-#     except Exception as e:
-#         print(f'Failed to load extension {extension}.', file=sys.stderr)
-#         traceback.print_exc()
-
 @bot.event
 async def on_ready():
-    print("Logged in as {0} ({0.id})".format(bot.user))
-    print('------')
-
-# @bot.event
-# async def on_message(message):
-#     # we do not want the bot to reply to itself
-#     if message.author.id == self.user.id:
-#         return
-#
-#     if message.content.startswith('!hello'):
-#         await message.reply('Hello!', mention_author=True)
+    logging.info("Logged in as {0} ({0.id})".format(bot.user))
+    logging.info('------')
 
 
 async def main(token):
@@ -61,14 +40,15 @@ async def main(token):
 
 
 if __name__ == "__main__":
-    print("Initializing...")
-    discord.utils.setup_logging(level=logging.INFO, root=False)
-
-    discord.opus.load_opus("/usr/lib/libopusenc.so.0")
-    if not discord.opus.is_loaded():
-        raise RuntimeError('Opus failed to load')
-
     cfg = environ.to_config(AppConfig)
+
+    logging_level = logging.DEBUG if cfg.debug else logging.INFO
+    discord.utils.setup_logging(level=logging_level, root=False)
+
+    if platform.system() == "Linux":
+        discord.opus.load_opus("/usr/lib/libopusenc.so.0")
+        if not discord.opus.is_loaded():
+            raise RuntimeError('Opus failed to load')
 
     if cfg.token:
         asyncio.run(main(cfg.token))

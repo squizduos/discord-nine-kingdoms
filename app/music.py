@@ -1,8 +1,5 @@
 # -*-coding:utf-8-*-
 
-import argparse
-import asyncio
-import json
 import os
 import environ
 
@@ -13,8 +10,9 @@ from discord.ext import commands
 # from discord_components import DiscordComponents, Button, ButtonStyle
 from typing import List, Optional
 
-ffmpeg_options = {
-    'options': '-vn'
+FFMPEG_OPTS = {
+    'before_options': '-stream_loop -1 -nostdin',
+    'options': '-vn -b:a 128k'
 }
 
 
@@ -25,30 +23,32 @@ class PlayButton(discord.ui.Button['Music']):
         self.bot = bot
 
     async def callback(self, interaction: discord.Interaction):
-        target_file_path = os.path.join(os.curdir, "../files", self.filename)
+        target_file_path = os.path.join(os.curdir, self.bot.cfg.files_dir, self.filename)
         print("Now playing: {}".format(target_file_path))
-
-        def repeat(file_path):
-            if self.bot.is_playing:
-                repeat_source = discord.PCMVolumeTransformer(
-                    discord.FFmpegPCMAudio(file_path, options="-b:a 128k -stream_loop -1", executable=self.bot.cfg.ffmpeg_executable)
-                )
-                repeat_source.volume = self.bot.volume
-
-                if self.bot.ctx.voice_client.is_playing():
-                    self.bot.ctx.voice_client.pause()
-
-                self.bot.ctx.voice_client.play(
-                    repeat_source, # after=lambda e: repeat(file_path)
-                )
-                # self.bot.ctx.voice_client.is_playing()
 
         if self.bot.ctx.voice_client.is_playing():
             self.bot.ctx.voice_client.pause()
 
         self.bot.is_playing = True
 
-        repeat(target_file_path)
+        error_file = open("error.txt", "a")
+        repeat_source = discord.PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(
+                target_file_path,
+                stderr=error_file,
+                executable=self.bot.cfg.ffmpeg_executable,
+                **FFMPEG_OPTS
+            )
+        )
+        repeat_source.volume = self.bot.volume
+
+        if self.bot.ctx.voice_client.is_playing():
+            self.bot.ctx.voice_client.pause()
+
+        self.bot.ctx.voice_client.play(
+            repeat_source
+        )
+        self.bot.ctx.voice_client.is_playing()
 
         self.bot.current = self.filename
 
@@ -69,7 +69,7 @@ class FilterPlaylistButton(discord.ui.Button['Music']):
 
 
 class PlayerView(discord.ui.View):
-    def __init__(self, *, timeout=180, bot=None, music_folder: str = "files", words: Optional[List[str]] = None):
+    def __init__(self, *, timeout=60*60*24, bot=None, music_folder: str = "files", words: Optional[List[str]] = None):
         super().__init__(timeout=timeout)
         self.bot = bot
         self.page = 0
@@ -89,7 +89,6 @@ class PlayerView(discord.ui.View):
 
     def __page_size__(self):
         return 20 - (len(self.words) + 1)
-
 
     def __get_music_files__(self, music_folder: str = ""):
         files_list = sorted(os.listdir(os.path.join(os.path.abspath(os.curdir), music_folder)))
@@ -218,6 +217,16 @@ class MusicBot(commands.Cog):
         # ctx.voice_client.stop()
         await ctx.voice_client.disconnect()
 
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction):
+        print(interaction.data)
+        # data = interaction.data
+        # type = data['component_type']
+        # custom_id = data['custom_id']
+        # if type == 2:
+        #     print(f"This is a button {custom_id}")
+        # else:
+        #     print("This isn't a button")
 
 
 def setup(bot):
