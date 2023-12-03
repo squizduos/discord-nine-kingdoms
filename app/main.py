@@ -1,4 +1,4 @@
-#-*-coding:utf-8-*-
+# -*-coding:utf-8-*-
 
 import asyncio
 import logging
@@ -17,20 +17,27 @@ import tracemalloc
 
 tracemalloc.start()
 
+import os
+import sys
+
+sys.path.append(os.getcwd())
+
+
 intents = discord.Intents.default()
 intents.message_content = True
 
+
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(">", "!"),
-    description='Plays local music file in voice channel',
-    intents=intents
+    description="Plays local music file in voice channel",
+    intents=intents,
 )
 
 
 @bot.event
 async def on_ready():
     logging.info("Logged in as {0} ({0.id})".format(bot.user))
-    logging.info('------')
+    logging.info("------")
 
 
 async def main(token):
@@ -48,7 +55,7 @@ if __name__ == "__main__":
     if platform.system() == "Linux":
         discord.opus.load_opus("/usr/lib/libopusenc.so.0")
         if not discord.opus.is_loaded():
-            raise RuntimeError('Opus failed to load')
+            raise RuntimeError("Opus failed to load")
 
     if cfg.token:
         asyncio.run(main(cfg.token))

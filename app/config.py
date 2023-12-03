@@ -1,5 +1,9 @@
 import environ
 
+
+FFMPEG_OPTS = {"before_options": "-stream_loop -1 -nostdin", "options": "-vn -b:a 128k"}
+
+
 @environ.config
 class AppConfig:
     token = environ.var(help="Discord app token.")
