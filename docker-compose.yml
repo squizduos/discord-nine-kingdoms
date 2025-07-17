@@ -18,7 +18,7 @@ services:
     restart: always
 
   bot:
-    image: squizduos/discord-nine-kingdoms:latest
+    image: ghcr.io/squizduos/discord-nine-kingdoms:master
     restart: always
     volumes:
      - nine_kingdoms_music:/files

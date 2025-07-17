@@ -1,11 +1,26 @@
-FROM python:3.9-alpine3.15
+# Use a more recent and secure base image
+FROM python:3.12-alpine3.20
 
-RUN apk add --no-cache libffi python3-dev ffmpeg libopusenc
+# Install system dependencies
+RUN apk add --no-cache \
+    libffi \
+    ffmpeg \
+    libopusenc \
+    build-base \
+    python3-dev \
+    libffi-dev \
+    musl-dev
 
-COPY requirements.txt /tmp/requirements.txt
+# Set working directory
+WORKDIR /app
 
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+# Copy and install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY ./app /app
+# Copy application code
+COPY ./app .
 
-ENTRYPOINT ["python", "/app/main.py"]
+# Use exec form to avoid shell wrapping
+ENTRYPOINT ["python", "main.py"]
