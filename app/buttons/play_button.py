@@ -21,15 +21,18 @@ class PlayButton(discord.ui.Button["Music"]):
 
         self.player_view.is_playing = True
 
-        repeat_source = discord.PCMVolumeTransformer(
+        if self.bot.repeat_source:
+            self.bot.repeat_source.cleanup()
+
+        self.bot.repeat_source = discord.PCMVolumeTransformer(
             discord.FFmpegPCMAudio(target_file_path, executable=self.bot.cfg.ffmpeg_executable, **config.FFMPEG_OPTS)
         )
-        repeat_source.volume = self.player_view.volume
+        self.bot.repeat_source.volume = self.player_view.volume
 
         if self.bot.ctx.voice_client.is_playing():
             self.bot.ctx.voice_client.pause()
 
-        self.bot.ctx.voice_client.play(repeat_source)
+        self.bot.ctx.voice_client.play(self.bot.repeat_source)
         self.bot.ctx.voice_client.is_playing()
 
         self.player_view.current = self.filename

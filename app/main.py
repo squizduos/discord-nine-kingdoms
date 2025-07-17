@@ -11,7 +11,8 @@ import environ
 
 from config import AppConfig
 
-from music import MusicBot
+from cogs.music import MusicCog
+from cogs.roll import RollCog
 
 import tracemalloc
 
@@ -40,10 +41,19 @@ async def on_ready():
     logging.info("------")
 
 
+@bot.command(name="sync")
+async def sync(ctx):
+    ctx.bot.tree.copy_global_to(guild=ctx.guild)
+    synced = await bot.tree.sync(guild=ctx.guild)
+    print(f"Synced {len(synced)} command(s).")
+
+
 async def main(token):
     async with bot:
-        await bot.add_cog(MusicBot(bot))
+        await bot.add_cog(MusicCog(bot))
+        await bot.add_cog(RollCog(bot))
         await bot.start(token)
+        print("123")
 
 
 if __name__ == "__main__":

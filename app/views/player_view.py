@@ -97,6 +97,9 @@ class PlayerView(discord.ui.View):
         if self.bot.ctx.voice_client.is_playing():
             self.bot.ctx.voice_client.pause()
 
+        if self.bot.repeat_source:
+            self.bot.repeat_source.cleanup()
+
         self.bot.is_playing = False
         self.current = "#NA"
 
